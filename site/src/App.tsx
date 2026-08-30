@@ -110,7 +110,7 @@ export default function App() {
       } catch {}
       try {
         const base = import.meta.env.BASE_URL || "/";
-        const res = await fetch(`${base}data/fx.json`);
+        const res = await fetch(`${base}data/fx.json`, { signal: AbortSignal.timeout(5000) });
         if (res.ok) {
           const j = (await res.json()) as { rates: Record<string, number> };
           if (j.rates && j.rates[currency]) {
@@ -163,7 +163,8 @@ export default function App() {
         <div>
           <h1>S&P 500 & BTC: YoY Performance</h1>
           <p className="subtitle">
-            Indexed to Jan 1 = 100 per year. Toggle years and range to compare. Data snapshot from Yahoo Finance (S&P 500) and Yahoo Finance / CoinGecko (BTC 2013/2014-present, no synthetic). Generated {sp500Snapshot.generatedAt.slice(0, 10)}.
+            Indexed to Jan 1 = 100 per year. Toggle years and range to compare. Data snapshot from Yahoo Finance (S&P 500) and Yahoo Finance / CoinGecko (BTC 2013/2014-present, no synthetic). Generated{" "}
+            {new Date(sp500Snapshot.generatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}.
           </p>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>

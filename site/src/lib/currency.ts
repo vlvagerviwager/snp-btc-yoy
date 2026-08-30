@@ -19,7 +19,7 @@ let cachedBase = "USD";
 export async function fetchFxRates(base: string = "USD"): Promise<Record<string, number>> {
   if (cachedRates && cachedBase === base) return cachedRates;
   try {
-    const res = await fetch(FX_API.replace("from=USD", `from=${base}`));
+    const res = await fetch(FX_API.replace("from=USD", `from=${base}`), { signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error(`FX ${res.status}`);
     const json = (await res.json()) as { rates: Record<string, number> };
     cachedRates = json.rates;
@@ -28,7 +28,7 @@ export async function fetchFxRates(base: string = "USD"): Promise<Record<string,
   } catch {
     // fallback to exchangerate.host
     try {
-      const res2 = await fetch(`https://api.exchangerate.host/latest?base=${base}`);
+      const res2 = await fetch(`https://api.exchangerate.host/latest?base=${base}`, { signal: AbortSignal.timeout(8000) });
       if (!res2.ok) throw new Error(`FX2 ${res2.status}`);
       const j2 = (await res2.json()) as { rates: Record<string, number> };
       cachedRates = j2.rates;

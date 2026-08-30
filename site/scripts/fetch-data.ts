@@ -31,6 +31,7 @@ async function fetchYahoo(ticker: string): Promise<RawPoint[]> {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?period1=${START}&period2=${NOW}&interval=1d&includePrePost=false`;
   const res = await fetch(url, {
     headers: { "User-Agent": "Mozilla/5.0" },
+    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`Yahoo ${ticker} ${res.status}`);
   const j = (await res.json()) as unknown as {
@@ -51,7 +52,7 @@ async function fetchYahoo(ticker: string): Promise<RawPoint[]> {
 
 async function fetchCoinGecko(): Promise<RawPoint[]> {
   const url = `https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=max&interval=daily`;
-  const res = await fetch(url);
+  const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
   if (!res.ok) throw new Error(`CoinGecko ${res.status}`);
   const j = (await res.json()) as { prices: [number, number][] };
   return j.prices.map(([ts, price]) => ({
@@ -166,7 +167,7 @@ async function main() {
   // This allows the app (default EUR) to convert USD snapshot prices at runtime.
   // We grab current rates and also try to fetch a EUR sample for BTC to verify.
   try {
-    const fxRes = await fetch("https://api.frankfurter.app/latest?from=USD");
+    const fxRes = await fetch("https://api.frankfurter.app/latest?from=USD", { signal: AbortSignal.timeout(8000) });
     if (fxRes.ok) {
       const fxJson = (await fxRes.json()) as { rates: Record<string, number>; date: string };
       writeFileSync(join(OUT_DIR, "fx.json"), JSON.stringify({ base: "USD", date: fxJson.date, rates: fxJson.rates, source: "frankfurter.app" }, null, 2));
@@ -177,7 +178,7 @@ async function main() {
   } catch (e) {
     console.warn("FX fetch failed, trying exchangerate.host", e);
     try {
-      const r2 = await fetch("https://api.exchangerate.host/latest?base=USD");
+      const r2 = await fetch("https://api.exchangerate.host/latest?base=USD", { signal: AbortSignal.timeout(8000) });
       if (r2.ok) {
         const j2 = (await r2.json()) as { rates: Record<string, number> };
         writeFileSync(join(OUT_DIR, "fx.json"), JSON.stringify({ base: "USD", date: new Date().toISOString().slice(0, 10), rates: j2.rates, source: "exchangerate.host" }, null, 2));
@@ -190,7 +191,7 @@ async function main() {
 
   // Also fetch BTC in EUR for verification that EUR data can be grabbed again
   try {
-    const btcEur = await fetch("https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=eur&days=max&interval=daily");
+    const btcEur = await fetch("https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=eur&days=max&interval=daily", { signal: AbortSignal.timeout(10000) });
     if (btcEur.ok) {
       const j = (await btcEur.json()) as { prices: [number, number][] };
       const sample = j.prices.slice(-3).map(([ts, p]) => ({ date: toISO(new Date(ts)), close: p }));
