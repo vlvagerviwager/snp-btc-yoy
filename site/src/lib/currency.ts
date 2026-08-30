@@ -40,9 +40,9 @@ export async function fetchFxRates(base: string = "USD"): Promise<Record<string,
   }
 }
 
-export function convertPrice(priceUsd: number, rates: Record<string, number>, target: Currency): number {
-  if (target === "USD") return priceUsd;
-  const rate = rates[target];
+export function convertPrice(priceUsd: number, rates: Record<string, number> | undefined | null, target: Currency): number {
+  if (!rates || target === "USD") return priceUsd;
+  const rate = (rates as Record<string, number>)[target];
   if (!rate) return priceUsd;
   return priceUsd * rate;
 }

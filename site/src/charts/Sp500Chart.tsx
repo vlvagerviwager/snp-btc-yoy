@@ -15,7 +15,7 @@ function CustomTooltip({
   payload?: Array<{ dataKey: string; value: number; color: string }>;
   label?: number;
   currency: Currency;
-  rates: Record<string, number>;
+  rates: Record<string, number> | undefined | null;
 }) {
   if (!active || !payload || payload.length === 0) return null;
   const row = (payload[0] as unknown as { payload: Record<string, unknown> }).payload as Record<string, unknown>;
@@ -42,7 +42,7 @@ function CustomTooltip({
   );
 }
 
-export function Sp500Chart({ series, allYears, range, currency, rates }: { series: YearSeries[]; allYears: number[]; range: Range | null; currency: Currency; rates: Record<string, number> }) {
+export function Sp500Chart({ series, allYears, range, currency, rates }: { series: YearSeries[]; allYears: number[]; range: Range | null; currency: Currency; rates: Record<string, number> | undefined | null }) {
   if (series.length === 0) {
     if (!range) return <p data-testid="empty-sp500">No years selected. Select a year or a range.</p>;
     const recent = getRecentSeries(sp500Snapshot, range);

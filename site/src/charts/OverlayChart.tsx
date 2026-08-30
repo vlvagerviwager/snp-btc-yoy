@@ -15,7 +15,7 @@ function OverlayTooltip({
   payload?: Array<{ dataKey: string; value: number; color: string; name: string }>;
   label?: number;
   currency: Currency;
-  rates: Record<string, number>;
+  rates: Record<string, number> | undefined | null;
   year: number;
 }) {
   if (!active || !payload || payload.length === 0) return null;
@@ -41,7 +41,7 @@ function OverlayTooltip({
   );
 }
 
-export function OverlayChart({ spSeries, btcSeries, year, range, currency, rates }: { spSeries: YearSeries[]; btcSeries: YearSeries[]; year: number | null; range: Range | null; currency: Currency; rates: Record<string, number> }) {
+export function OverlayChart({ spSeries, btcSeries, year, range, currency, rates }: { spSeries: YearSeries[]; btcSeries: YearSeries[]; year: number | null; range: Range | null; currency: Currency; rates: Record<string, number> | undefined | null }) {
   // Recent mode: no year selected, range selected -> show past range overlay
   if (year == null) {
     if (!range) return <p data-testid="empty-overlay">Select a year or a range to compare.</p>;
