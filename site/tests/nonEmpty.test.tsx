@@ -6,7 +6,9 @@ describe("charts not empty", () => {
     expect(sp500Snapshot.yearList.length).toBeGreaterThan(0);
     expect(btcSnapshot.yearList.length).toBeGreaterThan(0);
     expect(sp500Snapshot.yearList).toContain(2010);
-    expect(btcSnapshot.yearList).toContain(2010);
+    // BTC real data starts 2014 (Yahoo) / 2013 (CoinGecko), no synthetic for 2010
+    expect(btcSnapshot.yearList).toContain(2014);
+    expect(btcSnapshot.yearList).not.toContain(2010);
   });
 
   it("overlay has data for a valid year", () => {
@@ -28,10 +30,12 @@ describe("charts not empty", () => {
     expect(isNaN(lastIndexed)).toBe(false);
   });
 
-  it("btc 2010 synthetic year exists and has points", () => {
-    const btc2010 = btcSnapshot.years["2010"];
-    expect(btc2010).toBeDefined();
-    expect(btc2010.points.length).toBeGreaterThan(100);
-    expect(btc2010.points[0].indexed).toBe(100);
+  it("btc 2014 real year exists and has points (no synthetic)", () => {
+    const btc2014 = btcSnapshot.years["2014"];
+    expect(btc2014).toBeDefined();
+    expect(btc2014.points.length).toBeGreaterThan(10);
+    expect(btc2014.points[0].indexed).toBe(100);
+    // 2010 should be missing (no fake)
+    expect(btcSnapshot.years["2010"]).toBeUndefined();
   });
 });

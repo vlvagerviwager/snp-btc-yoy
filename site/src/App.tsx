@@ -85,6 +85,7 @@ export default function App() {
     return "EUR";
   });
   const [rates, setRates] = useState<Record<string, number>>({});
+  const [fxError, setFxError] = useState(false);
   useEffect(() => {
     localStorage.setItem("currency", currency);
     const url = new URL(window.location.href);
@@ -94,6 +95,7 @@ export default function App() {
   useEffect(() => {
     if (currency === "USD") {
       setRates({});
+      setFxError(false);
       return;
     }
     // Try live API first, fallback to static fx.json built at data-fetch time
@@ -102,6 +104,7 @@ export default function App() {
         const live = await fetchFxRates("USD");
         if (live && Object.keys(live).length > 0 && live[currency]) {
           setRates(live);
+          setFxError(false);
           return;
         }
       } catch {}
@@ -112,11 +115,14 @@ export default function App() {
           const j = (await res.json()) as { rates: Record<string, number> };
           if (j.rates && j.rates[currency]) {
             setRates(j.rates);
+            setFxError(false);
             return;
           }
         }
       } catch {}
-      // last resort: keep empty (will show USD fallback)
+      // last resort: keep empty (will show USD fallback) and show error
+      setRates({});
+      setFxError(true);
     };
     load();
   }, [currency]);
@@ -157,7 +163,7 @@ export default function App() {
         <div>
           <h1>S&P 500 & BTC: YoY Performance</h1>
           <p className="subtitle">
-            Indexed to Jan 1 = 100 per year. Toggle years and range to compare. Data snapshot from Yahoo Finance (S&P 500) and Yahoo/BTC synthetic 2010-2014 + Yahoo Finance 2014-present. Generated {sp500Snapshot.generatedAt.slice(0, 10)}.
+            Indexed to Jan 1 = 100 per year. Toggle years and range to compare. Data snapshot from Yahoo Finance (S&P 500) and Yahoo Finance / CoinGecko (BTC 2013/2014-present, no synthetic). Generated {sp500Snapshot.generatedAt.slice(0, 10)}.
           </p>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
@@ -165,6 +171,12 @@ export default function App() {
           <ThemeToggle />
         </div>
       </header>
+
+      {fxError && currency !== "USD" && (
+        <div data-testid="fx-error" role="alert" style={{ border: "1px solid var(--accent)", background: "var(--card-bg)", padding: "8px 12px", marginBottom: 16, color: "var(--accent)", fontFamily: "Inter, system-ui, sans-serif", fontSize: "0.85rem" }}>
+          FX rates unavailable for {currency}, showing prices in USD as fallback. Check network or try USD.
+        </div>
+      )}
 
       <main className="grid">
         <section className="card" aria-labelledby="sp500-heading">
@@ -221,7 +233,7 @@ export default function App() {
               </div>
               <BtcChart series={btcSeries} allYears={btcAll} range={btcRange} currency={currency} rates={rates} />
               {btcSeries.length > 0 ? (
-                <p className="hint">{btcSeries.length} year(s) shown, full year view, BTC synthetic for 2010-2014, real from Sep 2014, hover for exact values</p>
+                <p className="hint">{btcSeries.length} year(s) shown, full year view, BTC 2014-present (Yahoo) / 2013-present (CoinGecko), no synthetic, hover for exact values</p>
               ) : btcRange ? (
                 <p className="hint">Showing BTC performance in past {btcRange}, indexed to start of range, hover for exact values</p>
               ) : null}
