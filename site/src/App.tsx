@@ -107,7 +107,7 @@ export default function App() {
           {btcSeries.length > 0 && <p className="hint">{btcSeries.length} year(s) shown · {btcRange} view · BTC synthetic for 2010–2014, real from Sep 2014 · hover for exact values</p>}
         </section>
 
-        <section className="card span2" aria-labelledby="overlay-heading">
+        <section className="card" aria-labelledby="overlay-heading">
           <h2 id="overlay-heading">Overlay — S&P 500 vs BTC ({overlaySelected})</h2>
           <div className="overlay-controls">
             <label>
