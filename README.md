@@ -2,7 +2,7 @@
 
 S&P 500 & BTC Year-over-Year Performance: static site on GitHub Pages. This started because I wanted correlate S&P 500 performance against BTC in different years, and couldn't find an uncluttered view of this online.
 
-**Live site:** `https://vlvagerviwager.github.io/snp-btc-yoy/` (GitHub Pages, served from `site/dist`)
+**Live site:** [https://vlvagerviwager.github.io/snp-btc-yoy/](https://vlvagerviwager.github.io/snp-btc-yoy/) (GitHub Pages, served from `site/dist`)
 
 ![App](screenshots/app.png)
 
