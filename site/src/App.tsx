@@ -96,7 +96,29 @@ export default function App() {
       setRates({});
       return;
     }
-    fetchFxRates("USD").then((r) => setRates(r));
+    // Try live API first, fallback to static fx.json built at data-fetch time
+    const load = async () => {
+      try {
+        const live = await fetchFxRates("USD");
+        if (live && Object.keys(live).length > 0 && live[currency]) {
+          setRates(live);
+          return;
+        }
+      } catch {}
+      try {
+        const base = import.meta.env.BASE_URL || "/";
+        const res = await fetch(`${base}data/fx.json`);
+        if (res.ok) {
+          const j = (await res.json()) as { rates: Record<string, number> };
+          if (j.rates && j.rates[currency]) {
+            setRates(j.rates);
+            return;
+          }
+        }
+      } catch {}
+      // last resort: keep empty (will show USD fallback)
+    };
+    load();
   }, [currency]);
 
   const [spCollapsed, setSpCollapsed] = useState(false);
