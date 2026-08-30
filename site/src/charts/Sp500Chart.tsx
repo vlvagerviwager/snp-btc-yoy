@@ -1,13 +1,14 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from "recharts";
 import type { YearSeries } from "../types";
-import { COLORS, mergeSeriesByDoy, filterByRange, type Range } from "../lib/data";
+import { COLORS, mergeSeriesByDoy, filterByRange, doyToLabel, MONTH_STARTS, getRecentSeries, sp500Snapshot, type Range } from "../lib/data";
 
-function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ dataKey: string; value: number; color: string }>; label?: string }) {
+function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ dataKey: string; value: number; color: string }>; label?: number }) {
   if (!active || !payload || payload.length === 0) return null;
   const row = (payload[0] as unknown as { payload: Record<string, unknown> }).payload as Record<string, unknown>;
+  const monthLabel = typeof label === "number" ? doyToLabel(label) : String(label ?? "");
   return (
     <div className="custom-tooltip" style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 12, color: "var(--fg)" }}>
-      <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{label} (doy {row.doy as number})</div>
+      <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{monthLabel} (doy {row.doy as number})</div>
       {payload.map((p) => {
         const year = p.dataKey;
         const price = row[`${year}_price`] as number | undefined;
@@ -23,9 +24,36 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
   );
 }
 
-export function Sp500Chart({ series, allYears, range }: { series: YearSeries[]; allYears: number[]; range: Range }) {
+export function Sp500Chart({ series, allYears, range }: { series: YearSeries[]; allYears: number[]; range: Range | null }) {
   if (series.length === 0) {
-    return <p data-testid="empty-sp500">No years selected.</p>;
+    if (!range) return <p data-testid="empty-sp500">No years selected. Select a year or a range.</p>;
+    const recent = getRecentSeries(sp500Snapshot, range);
+    if (recent.length === 0) return <p data-testid="empty-sp500">No data for range {range}.</p>;
+    return (
+      <div data-testid="chart-sp500" style={{ width: "100%", height: 360 }}>
+        <ResponsiveContainer>
+          <LineChart data={recent} margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
+            <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+            <XAxis dataKey="date" tick={{ fontSize: 11, fill: "var(--fg)" }} interval={Math.max(0, Math.floor(recent.length / 6) - 1)} />
+            <YAxis tick={{ fontSize: 11, fill: "var(--fg)" }} domain={["auto", "auto"]} label={{ value: `Indexed (start of ${range} = 100)`, angle: -90, position: "insideLeft", fontSize: 11, fill: "var(--fg)" }} />
+            <Tooltip
+              content={({ active, payload }) => {
+                if (!active || !payload || payload.length === 0) return null;
+                const row = (payload[0].payload as { date: string; iso: string; close: number; indexed: number });
+                return (
+                  <div className="custom-tooltip" style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 12, color: "var(--fg)" }}>
+                    <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{row.iso}</div>
+                    <div style={{ color: "#2563eb" }}>S&P 500: {row.indexed.toFixed(2)}% · ${row.close.toLocaleString()}</div>
+                  </div>
+                );
+              }}
+            />
+            <Legend />
+            <Line type="monotone" dataKey="indexed" name={`S&P 500 last ${range}`} stroke="#2563eb" dot={false} activeDot={{ r: 4 }} strokeWidth={2} isAnimationActive={false} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    );
   }
   const merged = mergeSeriesByDoy(series);
   const data = filterByRange(merged, range);
@@ -34,7 +62,7 @@ export function Sp500Chart({ series, allYears, range }: { series: YearSeries[]; 
       <ResponsiveContainer>
         <LineChart data={data} margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-          <XAxis dataKey="label" interval={Math.max(0, Math.floor(data.length / 12) - 1)} tick={{ fontSize: 11, fill: "var(--fg)" }} />
+          <XAxis dataKey="doy" type="number" domain={["dataMin", "dataMax"]} ticks={MONTH_STARTS.filter((d) => d >= (data[0]?.doy ?? 1) && d <= (data[data.length - 1]?.doy ?? 365))} tickFormatter={doyToLabel} tick={{ fontSize: 11, fill: "var(--fg)" }} />
           <YAxis tick={{ fontSize: 11, fill: "var(--fg)" }} domain={["auto", "auto"]} label={{ value: "Indexed (Jan 1 = 100)", angle: -90, position: "insideLeft", fontSize: 11, fill: "var(--fg)" }} />
           <Tooltip content={<CustomTooltip />} />
           <Legend />

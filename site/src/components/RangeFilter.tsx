@@ -1,7 +1,7 @@
 import { RANGES, type Range } from "../lib/data";
 
 type Props = {
-  value: Range;
+  value: Range | null;
   onChange: (r: Range) => void;
   label: string;
 };

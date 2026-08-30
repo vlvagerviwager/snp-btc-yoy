@@ -22,21 +22,23 @@ function useYearsParam(key: string, all: number[]): [number[], (v: number[]) => 
   useEffect(() => {
     const url = new URL(window.location.href);
     if (selected.length === all.length) url.searchParams.delete(key);
+    else if (selected.length === 0) url.searchParams.delete(key);
     else url.searchParams.set(key, selected.join(","));
     window.history.replaceState({}, "", url.toString());
   }, [selected, key, all]);
   return [selected, setSelected];
 }
 
-function useRangeParam(key: string, defaultRange: Range): [Range, (r: Range) => void] {
-  const [range, setRange] = useState<Range>(() => {
+function useRangeParam(key: string): [Range | null, (r: Range | null) => void] {
+  const [range, setRange] = useState<Range | null>(() => {
     const v = new URLSearchParams(window.location.search).get(key) as Range | null;
     if (v && ["1d", "1w", "1m", "3m", "6m", "1y", "5y"].includes(v)) return v;
-    return defaultRange;
+    return null;
   });
   useEffect(() => {
     const url = new URL(window.location.href);
-    url.searchParams.set(key, range);
+    if (range) url.searchParams.set(key, range);
+    else url.searchParams.delete(key);
     window.history.replaceState({}, "", url.toString());
   }, [range, key]);
   return [range, setRange];
@@ -52,10 +54,10 @@ export default function App() {
 
   const [spSelected, setSpSelected] = useYearsParam("sp", spAll);
   const [btcSelected, setBtcSelected] = useYearsParam("btc", btcAll);
-  const [spRange, setSpRange] = useRangeParam("spRange", "1y");
-  const [btcRange, setBtcRange] = useRangeParam("btcRange", "1y");
-  const [overlayRange, setOverlayRange] = useRangeParam("overlayRange", "1y");
-  const [overlaySelected, setOverlaySelected] = useState<number>(() => {
+  const [spRange, setSpRange] = useRangeParam("spRange");
+  const [btcRange, setBtcRange] = useRangeParam("btcRange");
+  const [overlayRange, setOverlayRange] = useRangeParam("overlayRange");
+  const [overlaySelected, setOverlaySelected] = useState<number | null>(() => {
     const v = new URLSearchParams(window.location.search).get("overlay");
     const n = Number(v);
     if (n && overlayYears.includes(n)) return n;
@@ -63,7 +65,8 @@ export default function App() {
   });
   useEffect(() => {
     const url = new URL(window.location.href);
-    url.searchParams.set("overlay", String(overlaySelected));
+    if (overlaySelected == null) url.searchParams.delete("overlay");
+    else url.searchParams.set("overlay", String(overlaySelected));
     window.history.replaceState({}, "", url.toString());
   }, [overlaySelected]);
 
@@ -75,6 +78,32 @@ export default function App() {
   const [spCollapsed, setSpCollapsed] = useState(false);
   const [btcCollapsed, setBtcCollapsed] = useState(false);
   const [overlayCollapsed, setOverlayCollapsed] = useState(false);
+
+  // Mutual exclusivity handlers
+  const handleSpYearChange = (next: number[]) => {
+    setSpSelected(next);
+    if (next.length > 0) setSpRange(null);
+  };
+  const handleSpRangeChange = (r: Range) => {
+    setSpRange(r);
+    setSpSelected([]);
+  };
+  const handleBtcYearChange = (next: number[]) => {
+    setBtcSelected(next);
+    if (next.length > 0) setBtcRange(null);
+  };
+  const handleBtcRangeChange = (r: Range) => {
+    setBtcRange(r);
+    setBtcSelected([]);
+  };
+  const handleOverlayYearChange = (y: number | null) => {
+    setOverlaySelected(y);
+    if (y != null) setOverlayRange(null);
+  };
+  const handleOverlayRangeChange = (r: Range) => {
+    setOverlayRange(r);
+    setOverlaySelected(null);
+  };
 
   return (
     <div className="app">
@@ -105,13 +134,17 @@ export default function App() {
           </div>
           {!spCollapsed && (
             <div id="sp500-content">
-              <YearFilter years={spAll} selected={spSelected} onChange={setSpSelected} label="sp500" />
+              <YearFilter years={spAll} selected={spSelected} onChange={handleSpYearChange} label="sp500" />
               <div className="filter-row">
                 <span className="filter-label">Range:</span>
-                <RangeFilter value={spRange} onChange={setSpRange} label="sp500" />
+                <RangeFilter value={spRange} onChange={handleSpRangeChange} label="sp500" />
               </div>
               <Sp500Chart series={spSeries} allYears={spAll} range={spRange} />
-              {spSeries.length > 0 && <p className="hint">{spSeries.length} year(s) shown · {spRange} view · Y-axis = % of Jan 1 close · hover lines for exact values</p>}
+              {spSeries.length > 0 ? (
+                <p className="hint">{spSeries.length} year(s) shown · full year view · Y-axis = % of Jan 1 close · hover lines for exact values</p>
+              ) : spRange ? (
+                <p className="hint">Showing S&P 500 performance in past {spRange} · indexed to start of range · hover for exact values</p>
+              ) : null}
             </div>
           )}
         </section>
@@ -132,20 +165,24 @@ export default function App() {
           </div>
           {!btcCollapsed && (
             <div id="btc-content">
-              <YearFilter years={btcAll} selected={btcSelected} onChange={setBtcSelected} label="btc" />
+              <YearFilter years={btcAll} selected={btcSelected} onChange={handleBtcYearChange} label="btc" />
               <div className="filter-row">
                 <span className="filter-label">Range:</span>
-                <RangeFilter value={btcRange} onChange={setBtcRange} label="btc" />
+                <RangeFilter value={btcRange} onChange={handleBtcRangeChange} label="btc" />
               </div>
               <BtcChart series={btcSeries} allYears={btcAll} range={btcRange} />
-              {btcSeries.length > 0 && <p className="hint">{btcSeries.length} year(s) shown · {btcRange} view · BTC synthetic for 2010–2014, real from Sep 2014 · hover for exact values</p>}
+              {btcSeries.length > 0 ? (
+                <p className="hint">{btcSeries.length} year(s) shown · full year view · BTC synthetic for 2010–2014, real from Sep 2014 · hover for exact values</p>
+              ) : btcRange ? (
+                <p className="hint">Showing BTC performance in past {btcRange} · indexed to start of range · hover for exact values</p>
+              ) : null}
             </div>
           )}
         </section>
 
         <section className="card" aria-labelledby="overlay-heading">
           <div className="card-header">
-            <h2 id="overlay-heading">Overlay — S&P 500 vs BTC ({overlaySelected})</h2>
+            <h2 id="overlay-heading">Overlay — S&P 500 vs BTC {overlaySelected ? `(${overlaySelected})` : overlayRange ? `(last ${overlayRange})` : ""}</h2>
             <button
               type="button"
               aria-expanded={!overlayCollapsed}
@@ -163,10 +200,14 @@ export default function App() {
                 <label>
                   Year{" "}
                   <select
-                    value={overlaySelected}
-                    onChange={(e) => setOverlaySelected(Number(e.target.value))}
+                    value={overlaySelected ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value ? Number(e.target.value) : null;
+                      handleOverlayYearChange(v);
+                    }}
                     data-testid="overlay-year-select"
                   >
+                    <option value="">Select year</option>
                     {overlayYears.map((y) => (
                       <option key={y} value={y}>
                         {y}
@@ -174,8 +215,8 @@ export default function App() {
                     ))}
                   </select>
                 </label>
-                <RangeFilter value={overlayRange} onChange={setOverlayRange} label="overlay" />
-                <span className="hint">Both indexed to Jan 1 = 100 — hover lines for exact % + price</span>
+                <RangeFilter value={overlayRange} onChange={handleOverlayRangeChange} label="overlay" />
+                <span className="hint">Both indexed to {overlayRange ? `start of last ${overlayRange}` : "Jan 1 = 100"} — hover lines for exact % + price</span>
               </div>
               <OverlayChart spSeries={spAllSeries} btcSeries={btcAllSeries} year={overlaySelected} range={overlayRange} />
             </div>
