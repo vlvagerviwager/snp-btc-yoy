@@ -3,32 +3,40 @@ import userEvent from "@testing-library/user-event";
 import App from "../src/App";
 
 describe("theme toggle", () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => {
+    localStorage.clear();
+    document.documentElement.removeAttribute("data-theme");
+  });
 
-  it("toggles theme and persists", async () => {
+  it("toggles theme and persists without ever showing System", async () => {
     const user = userEvent.setup();
     render(<App />);
     const btn = screen.getByTestId("theme-toggle");
+    expect(btn.textContent).not.toMatch(/System/);
     const firstLabel = btn.textContent;
 
     await user.click(btn);
     const secondLabel = btn.textContent;
     expect(secondLabel).not.toBe(firstLabel);
-    expect(localStorage.getItem("theme")).toBeTruthy();
-
-    // data-theme applied
-    const theme = localStorage.getItem("theme");
-    if (theme !== "system") {
-      expect(document.documentElement.getAttribute("data-theme")).toBe(theme);
-    }
+    expect(secondLabel).not.toMatch(/System/);
+    const stored = localStorage.getItem("theme");
+    expect(stored === "light" || stored === "dark").toBe(true);
+    expect(document.documentElement.getAttribute("data-theme")).toBe(stored);
   });
 
-  it("respects prefers-color-scheme is system by default", () => {
+  it("if already dark (via system), button shows Light and vice versa", () => {
+    // system dark mock is default false (light) in setup, so initial is light -> button shows Dark
     localStorage.clear();
     render(<App />);
-    // default is system -> no data-theme or system
-    const stored = localStorage.getItem("theme");
-    // App init sets system if nothing stored
-    expect(stored === null || stored === "system" || stored === "light" || stored === "dark").toBe(true);
+    const btn = screen.getByTestId("theme-toggle");
+    // with jsdom mock matchMedia false -> light, so button should offer Dark
+    expect(btn.textContent).toMatch(/Dark/);
+  });
+
+  it("never exposes System option", () => {
+    localStorage.clear();
+    render(<App />);
+    const btn = screen.getByTestId("theme-toggle");
+    expect(btn.textContent).not.toMatch(/System/i);
   });
 });

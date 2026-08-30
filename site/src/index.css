@@ -98,7 +98,13 @@ body {
 .year-chip input { accent-color: var(--accent); }
 
 .overlay-controls { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.filter-row { display: flex; gap: 8px; align-items: center; margin: 8px 0; flex-wrap: wrap; }
+.filter-label { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+.range-filter { display: flex; gap: 4px; flex-wrap: wrap; }
+.range-btn { border: 1px solid var(--border); background: var(--bg); color: var(--fg); padding: 4px 8px; border-radius: 999px; cursor: pointer; font-size: 0.78rem; }
+.range-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 .hint { color: var(--muted); font-size: 0.82rem; margin: 8px 0 0; }
+.custom-tooltip { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
 .footer { margin-top: 28px; border-top: 1px solid var(--border); padding-top: 12px; font-size: 0.85rem; color: var(--muted); }
 .footer a { color: var(--accent); }

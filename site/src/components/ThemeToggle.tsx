@@ -1,39 +1,46 @@
 import { useEffect, useState } from "react";
-import { applyTheme, getStoredTheme, type Theme } from "../lib/theme";
+import { applyTheme, getEffectiveTheme, type Theme } from "../lib/theme";
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("system");
+  const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
-    const t = getStoredTheme();
-    setTheme(t);
-    applyTheme(t);
+    const eff = getEffectiveTheme();
+    setTheme(eff);
+    applyTheme(eff);
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = () => {
-      if (getStoredTheme() === "system") applyTheme("system");
+      // only follow system if no explicit stored preference
+      if (!localStorage.getItem("theme")) {
+        const next = mq.matches ? "dark" : "light";
+        setTheme(next);
+        applyTheme(next);
+      }
     };
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
   }, []);
 
-  const cycle = () => {
-    const order: Theme[] = ["system", "light", "dark"];
-    const next = order[(order.indexOf(theme) + 1) % order.length];
+  const toggle = () => {
+    const next: Theme = theme === "dark" ? "light" : "dark";
     setTheme(next);
     applyTheme(next);
   };
 
-  const label = theme === "system" ? "System" : theme === "light" ? "Light" : "Dark";
+  // Display the *opposite* so user knows what clicking will switch to
+  // Requirement: if already dark (via system or stored), display "Light" and vice versa
+  const label = theme === "dark" ? "Light" : "Dark";
+  const icon = theme === "dark" ? "☀️" : "🌙";
 
   return (
     <button
       type="button"
-      onClick={cycle}
-      aria-label={`Theme: ${label}. Click to change.`}
+      onClick={toggle}
+      aria-label={`Switch to ${label} mode (currently ${theme})`}
       data-testid="theme-toggle"
       className="theme-toggle"
     >
-      <span aria-hidden>{theme === "dark" ? "🌙" : theme === "light" ? "☀️" : "🖥️"}</span> {label}
+      <span aria-hidden>{icon}</span> {label}
     </button>
   );
 }

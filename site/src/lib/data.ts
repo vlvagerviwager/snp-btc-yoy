@@ -15,7 +15,29 @@ export function getSeries(snap: Snapshot, years: number[]): YearSeries[] {
     .filter(Boolean) as YearSeries[];
 }
 
-// For charts: merge by day-of-year -> { doy, label, 2024: 102.3, 2025: 98.1 }
+export type Range = "1d" | "1w" | "1m" | "3m" | "6m" | "1y" | "5y";
+export const RANGES: Range[] = ["1d", "1w", "1m", "3m", "6m", "1y", "5y"];
+export const RANGE_DAYS: Record<Range, number> = {
+  "1d": 1,
+  "1w": 7,
+  "1m": 30,
+  "3m": 90,
+  "6m": 180,
+  "1y": 365,
+  "5y": 1825,
+};
+
+export function filterByRange<T extends { doy: number }>(data: T[], range: Range): T[] {
+  if (data.length === 0) return data;
+  const maxDoy = Math.max(...data.map((d) => d.doy));
+  const days = RANGE_DAYS[range];
+  // 5y or >365 just returns full year (max 366)
+  if (days >= 365) return data;
+  const minDoy = maxDoy - days + 1;
+  return data.filter((d) => d.doy >= minDoy);
+}
+
+// For charts: merge by day-of-year -> { doy, label, 2024: 102.3, 2024_price: 4523, 2025: 98.1 }
 export type MergedPoint = { doy: number; label: string; [year: string]: number | string };
 
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -26,11 +48,11 @@ export function mergeSeriesByDoy(series: YearSeries[]): MergedPoint[] {
   for (const s of series) for (const p of s.points) doySet.add(p.doy);
   const doys = [...doySet].sort((a, b) => a - b);
 
-  // map year -> doy -> indexed
-  const byYear = new Map<number, Map<number, { indexed: number; label: string }>>();
+  // map year -> doy -> {indexed, price, label}
+  const byYear = new Map<number, Map<number, { indexed: number; close: number; label: string }>>();
   for (const s of series) {
-    const m = new Map<number, { indexed: number; label: string }>();
-    for (const p of s.points) m.set(p.doy, { indexed: p.indexed, label: p.date });
+    const m = new Map<number, { indexed: number; close: number; label: string }>();
+    for (const p of s.points) m.set(p.doy, { indexed: p.indexed, close: p.close, label: p.date });
     byYear.set(s.year, m);
   }
 
@@ -38,7 +60,11 @@ export function mergeSeriesByDoy(series: YearSeries[]): MergedPoint[] {
     const row: MergedPoint = { doy, label: doyToLabel(doy) };
     for (const s of series) {
       const v = byYear.get(s.year)?.get(doy);
-      if (v) row[String(s.year)] = v.indexed;
+      if (v) {
+        row[String(s.year)] = v.indexed;
+        row[`${s.year}_price`] = v.close;
+        row[`${s.year}_date`] = v.label;
+      }
     }
     return row;
   });
