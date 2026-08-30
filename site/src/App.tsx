@@ -160,7 +160,7 @@ export default function App() {
             Indexed to Jan 1 = 100 per year. Toggle years and range to compare. Data snapshot from Yahoo Finance (S&P 500) and Yahoo/BTC synthetic 2010-2014 + Yahoo Finance 2014-present. Generated {sp500Snapshot.generatedAt.slice(0, 10)}.
           </p>
         </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
           <CurrencySelector value={currency} onChange={setCurrency} />
           <ThemeToggle />
         </div>
