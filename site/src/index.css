@@ -79,7 +79,25 @@ body {
   border-radius: 12px;
   padding: 16px;
 }
-.card h2 { margin: 0 0 12px; font-size: 1.1rem; }
+.card h2 { margin: 0; font-size: 1.1rem; }
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.collapse-btn {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.collapse-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 .year-filter-actions { display: flex; gap: 8px; margin-bottom: 8px; }
 .year-filter-actions button, .theme-toggle, .overlay-controls select {

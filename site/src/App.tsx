@@ -72,6 +72,10 @@ export default function App() {
   const spAllSeries = useMemo(() => getSeries(sp500Snapshot, spAll), [spAll]);
   const btcAllSeries = useMemo(() => getSeries(btcSnapshot, btcAll), [btcAll]);
 
+  const [spCollapsed, setSpCollapsed] = useState(false);
+  const [btcCollapsed, setBtcCollapsed] = useState(false);
+  const [overlayCollapsed, setOverlayCollapsed] = useState(false);
+
   return (
     <div className="app">
       <header className="app-header">
@@ -86,48 +90,96 @@ export default function App() {
 
       <main className="grid">
         <section className="card" aria-labelledby="sp500-heading">
-          <h2 id="sp500-heading">S&P 500 YoY (2010–present)</h2>
-          <YearFilter years={spAll} selected={spSelected} onChange={setSpSelected} label="sp500" />
-          <div className="filter-row">
-            <span className="filter-label">Range:</span>
-            <RangeFilter value={spRange} onChange={setSpRange} label="sp500" />
+          <div className="card-header">
+            <h2 id="sp500-heading">S&P 500 YoY (2010–present)</h2>
+            <button
+              type="button"
+              aria-expanded={!spCollapsed}
+              aria-controls="sp500-content"
+              data-testid="toggle-sp500"
+              className="collapse-btn"
+              onClick={() => setSpCollapsed((v) => !v)}
+            >
+              {spCollapsed ? "Expand" : "Collapse"} <span aria-hidden>{spCollapsed ? "▸" : "▾"}</span>
+            </button>
           </div>
-          <Sp500Chart series={spSeries} allYears={spAll} range={spRange} />
-          {spSeries.length > 0 && <p className="hint">{spSeries.length} year(s) shown · {spRange} view · Y-axis = % of Jan 1 close · hover lines for exact values</p>}
+          {!spCollapsed && (
+            <div id="sp500-content">
+              <YearFilter years={spAll} selected={spSelected} onChange={setSpSelected} label="sp500" />
+              <div className="filter-row">
+                <span className="filter-label">Range:</span>
+                <RangeFilter value={spRange} onChange={setSpRange} label="sp500" />
+              </div>
+              <Sp500Chart series={spSeries} allYears={spAll} range={spRange} />
+              {spSeries.length > 0 && <p className="hint">{spSeries.length} year(s) shown · {spRange} view · Y-axis = % of Jan 1 close · hover lines for exact values</p>}
+            </div>
+          )}
         </section>
 
         <section className="card" aria-labelledby="btc-heading">
-          <h2 id="btc-heading">BTC YoY (2010–present)</h2>
-          <YearFilter years={btcAll} selected={btcSelected} onChange={setBtcSelected} label="btc" />
-          <div className="filter-row">
-            <span className="filter-label">Range:</span>
-            <RangeFilter value={btcRange} onChange={setBtcRange} label="btc" />
+          <div className="card-header">
+            <h2 id="btc-heading">BTC YoY (2010–present)</h2>
+            <button
+              type="button"
+              aria-expanded={!btcCollapsed}
+              aria-controls="btc-content"
+              data-testid="toggle-btc"
+              className="collapse-btn"
+              onClick={() => setBtcCollapsed((v) => !v)}
+            >
+              {btcCollapsed ? "Expand" : "Collapse"} <span aria-hidden>{btcCollapsed ? "▸" : "▾"}</span>
+            </button>
           </div>
-          <BtcChart series={btcSeries} allYears={btcAll} range={btcRange} />
-          {btcSeries.length > 0 && <p className="hint">{btcSeries.length} year(s) shown · {btcRange} view · BTC synthetic for 2010–2014, real from Sep 2014 · hover for exact values</p>}
+          {!btcCollapsed && (
+            <div id="btc-content">
+              <YearFilter years={btcAll} selected={btcSelected} onChange={setBtcSelected} label="btc" />
+              <div className="filter-row">
+                <span className="filter-label">Range:</span>
+                <RangeFilter value={btcRange} onChange={setBtcRange} label="btc" />
+              </div>
+              <BtcChart series={btcSeries} allYears={btcAll} range={btcRange} />
+              {btcSeries.length > 0 && <p className="hint">{btcSeries.length} year(s) shown · {btcRange} view · BTC synthetic for 2010–2014, real from Sep 2014 · hover for exact values</p>}
+            </div>
+          )}
         </section>
 
         <section className="card" aria-labelledby="overlay-heading">
-          <h2 id="overlay-heading">Overlay — S&P 500 vs BTC ({overlaySelected})</h2>
-          <div className="overlay-controls">
-            <label>
-              Year{" "}
-              <select
-                value={overlaySelected}
-                onChange={(e) => setOverlaySelected(Number(e.target.value))}
-                data-testid="overlay-year-select"
-              >
-                {overlayYears.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <RangeFilter value={overlayRange} onChange={setOverlayRange} label="overlay" />
-            <span className="hint">Both indexed to Jan 1 = 100 — hover lines for exact % + price</span>
+          <div className="card-header">
+            <h2 id="overlay-heading">Overlay — S&P 500 vs BTC ({overlaySelected})</h2>
+            <button
+              type="button"
+              aria-expanded={!overlayCollapsed}
+              aria-controls="overlay-content"
+              data-testid="toggle-overlay"
+              className="collapse-btn"
+              onClick={() => setOverlayCollapsed((v) => !v)}
+            >
+              {overlayCollapsed ? "Expand" : "Collapse"} <span aria-hidden>{overlayCollapsed ? "▸" : "▾"}</span>
+            </button>
           </div>
-          <OverlayChart spSeries={spAllSeries} btcSeries={btcAllSeries} year={overlaySelected} range={overlayRange} />
+          {!overlayCollapsed && (
+            <div id="overlay-content">
+              <div className="overlay-controls">
+                <label>
+                  Year{" "}
+                  <select
+                    value={overlaySelected}
+                    onChange={(e) => setOverlaySelected(Number(e.target.value))}
+                    data-testid="overlay-year-select"
+                  >
+                    {overlayYears.map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <RangeFilter value={overlayRange} onChange={setOverlayRange} label="overlay" />
+                <span className="hint">Both indexed to Jan 1 = 100 — hover lines for exact % + price</span>
+              </div>
+              <OverlayChart spSeries={spAllSeries} btcSeries={btcAllSeries} year={overlaySelected} range={overlayRange} />
+            </div>
+          )}
         </section>
       </main>
 

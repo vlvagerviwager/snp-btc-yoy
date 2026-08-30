@@ -17,10 +17,10 @@ export function YearFilter({ years, selected, onChange, label }: Props) {
     <div className="year-filter" role="group" aria-label={label} data-testid={`filter-${label}`}>
       <div className="year-filter-actions">
         <button type="button" onClick={all} data-testid={`all-${label}`}>
-          All
+          Select all
         </button>
         <button type="button" onClick={none} data-testid={`none-${label}`}>
-          None
+          Clear selection
         </button>
       </div>
       <div className="year-filter-grid">
