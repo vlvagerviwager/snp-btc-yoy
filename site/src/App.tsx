@@ -109,9 +109,9 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <div>
-          <h1>S&P 500 & BTC — YoY Performance</h1>
+          <h1>S&P 500 & BTC: YoY Performance</h1>
           <p className="subtitle">
-            Indexed to Jan 1 = 100 per year. Toggle years and range to compare. Data snapshot from Yahoo Finance (S&P 500) and Yahoo/BTC synthetic 2010–2014 + Yahoo Finance 2014–present. Generated {sp500Snapshot.generatedAt.slice(0, 10)}.
+            Indexed to Jan 1 = 100 per year. Toggle years and range to compare. Data snapshot from Yahoo Finance (S&P 500) and Yahoo/BTC synthetic 2010-2014 + Yahoo Finance 2014-present. Generated {sp500Snapshot.generatedAt.slice(0, 10)}.
           </p>
         </div>
         <ThemeToggle />
@@ -120,7 +120,7 @@ export default function App() {
       <main className="grid">
         <section className="card" aria-labelledby="sp500-heading">
           <div className="card-header">
-            <h2 id="sp500-heading">S&P 500 YoY (2010–present)</h2>
+            <h2 id="sp500-heading">S&P 500 YoY (2010-present)</h2>
             <button
               type="button"
               aria-expanded={!spCollapsed}
@@ -141,9 +141,9 @@ export default function App() {
               </div>
               <Sp500Chart series={spSeries} allYears={spAll} range={spRange} />
               {spSeries.length > 0 ? (
-                <p className="hint">{spSeries.length} year(s) shown · full year view · Y-axis = % of Jan 1 close · hover lines for exact values</p>
+                <p className="hint">{spSeries.length} year(s) shown, full year view, Y-axis = % of Jan 1 close, hover lines for exact values</p>
               ) : spRange ? (
-                <p className="hint">Showing S&P 500 performance in past {spRange} · indexed to start of range · hover for exact values</p>
+                <p className="hint">Showing S&P 500 performance in past {spRange}, indexed to start of range, hover for exact values</p>
               ) : null}
             </div>
           )}
@@ -151,7 +151,7 @@ export default function App() {
 
         <section className="card" aria-labelledby="btc-heading">
           <div className="card-header">
-            <h2 id="btc-heading">BTC YoY (2010–present)</h2>
+            <h2 id="btc-heading">BTC YoY (2010-present)</h2>
             <button
               type="button"
               aria-expanded={!btcCollapsed}
@@ -172,9 +172,9 @@ export default function App() {
               </div>
               <BtcChart series={btcSeries} allYears={btcAll} range={btcRange} />
               {btcSeries.length > 0 ? (
-                <p className="hint">{btcSeries.length} year(s) shown · full year view · BTC synthetic for 2010–2014, real from Sep 2014 · hover for exact values</p>
+                <p className="hint">{btcSeries.length} year(s) shown, full year view, BTC synthetic for 2010-2014, real from Sep 2014, hover for exact values</p>
               ) : btcRange ? (
-                <p className="hint">Showing BTC performance in past {btcRange} · indexed to start of range · hover for exact values</p>
+                <p className="hint">Showing BTC performance in past {btcRange}, indexed to start of range, hover for exact values</p>
               ) : null}
             </div>
           )}
@@ -182,7 +182,7 @@ export default function App() {
 
         <section className="card" aria-labelledby="overlay-heading">
           <div className="card-header">
-            <h2 id="overlay-heading">Overlay — S&P 500 vs BTC {overlaySelected ? `(${overlaySelected})` : overlayRange ? `(last ${overlayRange})` : ""}</h2>
+            <h2 id="overlay-heading">Overlay: S&P 500 vs BTC {overlaySelected ? `(${overlaySelected})` : overlayRange ? `(last ${overlayRange})` : ""}</h2>
             <button
               type="button"
               aria-expanded={!overlayCollapsed}
@@ -216,7 +216,7 @@ export default function App() {
                   </select>
                 </label>
                 <RangeFilter value={overlayRange} onChange={handleOverlayRangeChange} label="overlay" />
-                <span className="hint">Both indexed to {overlayRange ? `start of last ${overlayRange}` : "Jan 1 = 100"} — hover lines for exact % + price</span>
+                <span className="hint">Both indexed to {overlayRange ? `start of last ${overlayRange}` : "Jan 1 = 100"}, hover lines for exact % + price</span>
               </div>
               <OverlayChart spSeries={spAllSeries} btcSeries={btcAllSeries} year={overlaySelected} range={overlayRange} />
             </div>
@@ -225,7 +225,7 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        <a href="https://github.com/vlvagerviwager/snp-btc-yoy">GitHub — snp-btc-yoy</a> · <a href="LICENSE">PolyForm Noncommercial 1.0.0</a> · Static site, no tracking.
+        <a href="https://github.com/vlvagerviwager/snp-btc-yoy">GitHub: snp-btc-yoy</a>, <a href="LICENSE">PolyForm Noncommercial 1.0.0</a>, Static site, no tracking.
       </footer>
     </div>
   );

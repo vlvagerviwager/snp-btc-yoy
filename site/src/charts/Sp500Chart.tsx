@@ -16,7 +16,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
         if (p.value == null) return null;
         return (
           <div key={year} style={{ color: p.color }}>
-            {year} {date ? `(${date})` : ""}: {p.value.toFixed(2)}% {price != null ? `· $${Number(price).toLocaleString()}` : ""}
+            {year} {date ? `(${date})` : ""}: {p.value.toFixed(2)}% {price != null ? `, $${Number(price).toLocaleString()}` : ""}
           </div>
         );
       })}
@@ -43,7 +43,7 @@ export function Sp500Chart({ series, allYears, range }: { series: YearSeries[]; 
                 return (
                   <div className="custom-tooltip" style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 12, color: "var(--fg)" }}>
                     <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{row.iso}</div>
-                    <div style={{ color: "#2563eb" }}>S&P 500: {row.indexed.toFixed(2)}% · ${row.close.toLocaleString()}</div>
+                    <div style={{ color: "#2563eb" }}>S&P 500: {row.indexed.toFixed(2)}%, ${row.close.toLocaleString()}</div>
                   </div>
                 );
               }}

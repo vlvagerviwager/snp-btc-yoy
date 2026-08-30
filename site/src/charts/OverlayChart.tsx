@@ -15,7 +15,7 @@ function OverlayTooltip({ active, payload, label }: { active?: boolean; payload?
         const price = isSp ? (row.spPrice as number | null) : (row.btcPrice as number | null);
         return (
           <div key={p.dataKey} style={{ color: p.color }}>
-            {p.name}: {p.value.toFixed(2)}% {price != null ? `· $${Number(price).toLocaleString()}` : ""}
+            {p.name}: {p.value.toFixed(2)}% {price != null ? `, $${Number(price).toLocaleString()}` : ""}
           </div>
         );
       })}
@@ -43,8 +43,8 @@ export function OverlayChart({ spSeries, btcSeries, year, range }: { spSeries: Y
                 return (
                   <div className="custom-tooltip" style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 12, color: "var(--fg)" }}>
                     <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{row.iso}</div>
-                    {row.sp != null && <div style={{ color: "#2563eb" }}>S&P 500: {row.sp.toFixed(2)}% {row.spPrice != null ? `· $${row.spPrice.toLocaleString()}` : ""}</div>}
-                    {row.btc != null && <div style={{ color: "#f59e0b" }}>BTC: {row.btc.toFixed(2)}% {row.btcPrice != null ? `· $${row.btcPrice.toLocaleString()}` : ""}</div>}
+                    {row.sp != null && <div style={{ color: "#2563eb" }}>S&P 500: {row.sp.toFixed(2)}% {row.spPrice != null ? `, $${row.spPrice.toLocaleString()}` : ""}</div>}
+                    {row.btc != null && <div style={{ color: "#f59e0b" }}>BTC: {row.btc.toFixed(2)}% {row.btcPrice != null ? `, $${row.btcPrice.toLocaleString()}` : ""}</div>}
                   </div>
                 );
               }}
