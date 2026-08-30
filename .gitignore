@@ -9,3 +9,5 @@ skills-lock.json
 /bun.lock
 /package.json
 !site/bun.lock
+.DS_Store
+**/.DS_Store
