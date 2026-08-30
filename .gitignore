@@ -1,0 +1,11 @@
+node_modules
+site/node_modules
+site/dist
+.opencode
+.agents
+.claude
+agent
+skills-lock.json
+/bun.lock
+/package.json
+!site/bun.lock
