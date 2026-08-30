@@ -1,21 +1,39 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from "recharts";
 import type { YearSeries } from "../types";
 import { overlayMerge, filterByRange, doyToLabel, MONTH_STARTS, getRecentOverlay, sp500Snapshot, btcSnapshot, type Range } from "../lib/data";
+import { formatExactDate, isoFromYearDoy } from "../lib/format";
+import { convertPrice, formatPrice, type Currency } from "../lib/currency";
 
-function OverlayTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ dataKey: string; value: number; color: string; name: string }>; label?: number }) {
+function OverlayTooltip({
+  active,
+  payload,
+  currency,
+  rates,
+  year,
+}: {
+  active?: boolean;
+  payload?: Array<{ dataKey: string; value: number; color: string; name: string }>;
+  label?: number;
+  currency: Currency;
+  rates: Record<string, number>;
+  year: number;
+}) {
   if (!active || !payload || payload.length === 0) return null;
   const row = (payload[0] as unknown as { payload: Record<string, unknown> }).payload as Record<string, unknown>;
-  const monthLabel = typeof label === "number" ? doyToLabel(label) : String(label ?? "");
+  const doy = row.doy as number;
+  const iso = isoFromYearDoy(year, doy);
+  const exact = formatExactDate(iso, doy);
   return (
     <div className="custom-tooltip" style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 12, color: "var(--fg)" }}>
-      <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{monthLabel} (doy {row.doy as number})</div>
+      <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{exact}</div>
       {payload.map((p) => {
         if (p.value == null) return null;
         const isSp = p.dataKey === "sp";
-        const price = isSp ? (row.spPrice as number | null) : (row.btcPrice as number | null);
+        const priceUsd = isSp ? (row.spPrice as number | null) : (row.btcPrice as number | null);
+        const priceStr = priceUsd != null ? formatPrice(convertPrice(priceUsd, rates, currency), currency) : "";
         return (
           <div key={p.dataKey} style={{ color: p.color }}>
-            {p.name}: {p.value.toFixed(2)}% {price != null ? `, $${Number(price).toLocaleString()}` : ""}
+            {p.name}: {p.value.toFixed(2)}% {priceStr ? `, ${priceStr}` : ""}
           </div>
         );
       })}
@@ -23,7 +41,7 @@ function OverlayTooltip({ active, payload, label }: { active?: boolean; payload?
   );
 }
 
-export function OverlayChart({ spSeries, btcSeries, year, range }: { spSeries: YearSeries[]; btcSeries: YearSeries[]; year: number | null; range: Range | null }) {
+export function OverlayChart({ spSeries, btcSeries, year, range, currency, rates }: { spSeries: YearSeries[]; btcSeries: YearSeries[]; year: number | null; range: Range | null; currency: Currency; rates: Record<string, number> }) {
   // Recent mode: no year selected, range selected -> show past range overlay
   if (year == null) {
     if (!range) return <p data-testid="empty-overlay">Select a year or a range to compare.</p>;
@@ -40,11 +58,13 @@ export function OverlayChart({ spSeries, btcSeries, year, range }: { spSeries: Y
               content={({ active, payload }) => {
                 if (!active || !payload || payload.length === 0) return null;
                 const row = (payload[0].payload as { iso: string; sp: number | null; btc: number | null; spPrice: number | null; btcPrice: number | null });
+                const doy = Math.ceil((new Date(row.iso + "T00:00:00Z").getTime() - new Date(Date.UTC(new Date(row.iso).getUTCFullYear(), 0, 0)).getTime()) / 86400000);
+                const exact = formatExactDate(row.iso, doy);
                 return (
                   <div className="custom-tooltip" style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 12, color: "var(--fg)" }}>
-                    <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{row.iso}</div>
-                    {row.sp != null && <div style={{ color: "#2563eb" }}>S&P 500: {row.sp.toFixed(2)}% {row.spPrice != null ? `, $${row.spPrice.toLocaleString()}` : ""}</div>}
-                    {row.btc != null && <div style={{ color: "#f59e0b" }}>BTC: {row.btc.toFixed(2)}% {row.btcPrice != null ? `, $${row.btcPrice.toLocaleString()}` : ""}</div>}
+                    <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{exact}</div>
+                    {row.sp != null && <div style={{ color: "#2563eb" }}>S&P 500: {row.sp.toFixed(2)}% {row.spPrice != null ? `, ${formatPrice(convertPrice(row.spPrice, rates, currency), currency)}` : ""}</div>}
+                    {row.btc != null && <div style={{ color: "#f59e0b" }}>BTC: {row.btc.toFixed(2)}% {row.btcPrice != null ? `, ${formatPrice(convertPrice(row.btcPrice, rates, currency), currency)}` : ""}</div>}
                   </div>
                 );
               }}
@@ -71,7 +91,7 @@ export function OverlayChart({ spSeries, btcSeries, year, range }: { spSeries: Y
           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
           <XAxis dataKey="doy" type="number" domain={[1, 365]} ticks={[...MONTH_STARTS, 365]} tickFormatter={(doy) => (doy === 365 ? "" : doyToLabel(doy))} tick={{ fontSize: 11, fill: "var(--fg)" }} />
           <YAxis tick={{ fontSize: 11, fill: "var(--fg)" }} domain={["auto", "auto"]} label={{ value: "Indexed (Jan 1 = 100)", angle: -90, position: "insideLeft", fontSize: 11, fill: "var(--fg)" }} />
-          <Tooltip content={<OverlayTooltip />} />
+          <Tooltip content={<OverlayTooltip currency={currency} rates={rates} year={year} />} />
           <Legend />
           <Line type="monotone" dataKey="sp" name={`S&P 500 ${year}`} stroke="#2563eb" dot={false} activeDot={{ r: 4 }} strokeWidth={2} connectNulls isAnimationActive={false} />
           <Line type="monotone" dataKey="btc" name={`BTC ${year}`} stroke="#f59e0b" dot={false} activeDot={{ r: 4 }} strokeWidth={2} connectNulls isAnimationActive={false} />

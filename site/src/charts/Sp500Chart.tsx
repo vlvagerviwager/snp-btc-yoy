@@ -1,22 +1,40 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from "recharts";
 import type { YearSeries } from "../types";
 import { COLORS, mergeSeriesByDoy, filterByRange, doyToLabel, MONTH_STARTS, getRecentSeries, sp500Snapshot, type Range } from "../lib/data";
+import { formatExactDate } from "../lib/format";
+import { convertPrice, formatPrice, type Currency } from "../lib/currency";
 
-function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ dataKey: string; value: number; color: string }>; label?: number }) {
+function CustomTooltip({
+  active,
+  payload,
+  label,
+  currency,
+  rates,
+}: {
+  active?: boolean;
+  payload?: Array<{ dataKey: string; value: number; color: string }>;
+  label?: number;
+  currency: Currency;
+  rates: Record<string, number>;
+}) {
   if (!active || !payload || payload.length === 0) return null;
   const row = (payload[0] as unknown as { payload: Record<string, unknown> }).payload as Record<string, unknown>;
+  const doy = row.doy as number;
   const monthLabel = typeof label === "number" ? doyToLabel(label) : String(label ?? "");
   return (
     <div className="custom-tooltip" style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 12, color: "var(--fg)" }}>
-      <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{monthLabel} (doy {row.doy as number})</div>
+      <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{monthLabel} (doy {doy})</div>
       {payload.map((p) => {
         const year = p.dataKey;
-        const price = row[`${year}_price`] as number | undefined;
+        const priceUsd = row[`${year}_price`] as number | undefined;
         const date = row[`${year}_date`] as string | undefined;
         if (p.value == null) return null;
+        const iso = date ? `${year}-${date}` : `${year}-01-01`;
+        const exact = formatExactDate(iso, doy);
+        const priceStr = priceUsd != null ? formatPrice(convertPrice(priceUsd, rates, currency), currency) : "";
         return (
           <div key={year} style={{ color: p.color }}>
-            {year} {date ? `(${date})` : ""}: {p.value.toFixed(2)}% {price != null ? `, $${Number(price).toLocaleString()}` : ""}
+            {year}: {p.value.toFixed(2)}% {priceStr ? `, ${priceStr}` : ""} <span style={{ color: "var(--muted)", fontSize: 11 }}>({exact})</span>
           </div>
         );
       })}
@@ -24,7 +42,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
   );
 }
 
-export function Sp500Chart({ series, allYears, range }: { series: YearSeries[]; allYears: number[]; range: Range | null }) {
+export function Sp500Chart({ series, allYears, range, currency, rates }: { series: YearSeries[]; allYears: number[]; range: Range | null; currency: Currency; rates: Record<string, number> }) {
   if (series.length === 0) {
     if (!range) return <p data-testid="empty-sp500">No years selected. Select a year or a range.</p>;
     const recent = getRecentSeries(sp500Snapshot, range);
@@ -40,10 +58,13 @@ export function Sp500Chart({ series, allYears, range }: { series: YearSeries[]; 
               content={({ active, payload }) => {
                 if (!active || !payload || payload.length === 0) return null;
                 const row = (payload[0].payload as { date: string; iso: string; close: number; indexed: number });
+                const doy = Math.ceil((new Date(row.iso + "T00:00:00Z").getTime() - new Date(Date.UTC(new Date(row.iso).getUTCFullYear(), 0, 0)).getTime()) / 86400000);
+                const exact = formatExactDate(row.iso, doy);
+                const priceStr = formatPrice(convertPrice(row.close, rates, currency), currency);
                 return (
                   <div className="custom-tooltip" style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 12, color: "var(--fg)" }}>
-                    <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{row.iso}</div>
-                    <div style={{ color: "#2563eb" }}>S&P 500: {row.indexed.toFixed(2)}%, ${row.close.toLocaleString()}</div>
+                    <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{exact}</div>
+                    <div style={{ color: "#2563eb" }}>S&P 500: {row.indexed.toFixed(2)}%, {priceStr}</div>
                   </div>
                 );
               }}
@@ -64,7 +85,7 @@ export function Sp500Chart({ series, allYears, range }: { series: YearSeries[]; 
           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
           <XAxis dataKey="doy" type="number" domain={[1, 365]} ticks={[...MONTH_STARTS, 365]} tickFormatter={(doy) => (doy === 365 ? "" : doyToLabel(doy))} tick={{ fontSize: 11, fill: "var(--fg)" }} />
           <YAxis tick={{ fontSize: 11, fill: "var(--fg)" }} domain={["auto", "auto"]} label={{ value: "Indexed (Jan 1 = 100)", angle: -90, position: "insideLeft", fontSize: 11, fill: "var(--fg)" }} />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<CustomTooltip currency={currency} rates={rates} />} />
           <Legend />
           {series.map((s) => (
             <Line

@@ -6,6 +6,8 @@ import { OverlayChart } from "./charts/OverlayChart";
 import { YearFilter } from "./components/YearFilter";
 import { RangeFilter } from "./components/RangeFilter";
 import { ThemeToggle } from "./components/ThemeToggle";
+import { CurrencySelector } from "./components/CurrencySelector";
+import { fetchFxRates, type Currency, CURRENCIES } from "./lib/currency";
 
 function useYearsParam(key: string, all: number[]): [number[], (v: number[]) => void] {
   const [selected, setSelected] = useState<number[]>(() => {
@@ -75,6 +77,28 @@ export default function App() {
   const spAllSeries = useMemo(() => getSeries(sp500Snapshot, spAll), [spAll]);
   const btcAllSeries = useMemo(() => getSeries(btcSnapshot, btcAll), [btcAll]);
 
+  const [currency, setCurrency] = useState<Currency>(() => {
+    const urlVal = new URLSearchParams(window.location.search).get("currency") as Currency | null;
+    if (urlVal && (CURRENCIES as readonly { code: string }[]).some((c) => c.code === urlVal)) return urlVal;
+    const stored = localStorage.getItem("currency") as Currency | null;
+    if (stored && (CURRENCIES as readonly { code: string }[]).some((c) => c.code === stored)) return stored;
+    return "EUR";
+  });
+  const [rates, setRates] = useState<Record<string, number>>({});
+  useEffect(() => {
+    localStorage.setItem("currency", currency);
+    const url = new URL(window.location.href);
+    url.searchParams.set("currency", currency);
+    window.history.replaceState({}, "", url.toString());
+  }, [currency]);
+  useEffect(() => {
+    if (currency === "USD") {
+      setRates({});
+      return;
+    }
+    fetchFxRates("USD").then((r) => setRates(r));
+  }, [currency]);
+
   const [spCollapsed, setSpCollapsed] = useState(false);
   const [btcCollapsed, setBtcCollapsed] = useState(false);
   const [overlayCollapsed, setOverlayCollapsed] = useState(false);
@@ -114,7 +138,10 @@ export default function App() {
             Indexed to Jan 1 = 100 per year. Toggle years and range to compare. Data snapshot from Yahoo Finance (S&P 500) and Yahoo/BTC synthetic 2010-2014 + Yahoo Finance 2014-present. Generated {sp500Snapshot.generatedAt.slice(0, 10)}.
           </p>
         </div>
-        <ThemeToggle />
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <CurrencySelector value={currency} onChange={setCurrency} />
+          <ThemeToggle />
+        </div>
       </header>
 
       <main className="grid">
@@ -139,7 +166,7 @@ export default function App() {
                 <span className="filter-label">Range:</span>
                 <RangeFilter value={spRange} onChange={handleSpRangeChange} label="sp500" />
               </div>
-              <Sp500Chart series={spSeries} allYears={spAll} range={spRange} />
+              <Sp500Chart series={spSeries} allYears={spAll} range={spRange} currency={currency} rates={rates} />
               {spSeries.length > 0 ? (
                 <p className="hint">{spSeries.length} year(s) shown, full year view, Y-axis = % of Jan 1 close, hover lines for exact values</p>
               ) : spRange ? (
@@ -170,7 +197,7 @@ export default function App() {
                 <span className="filter-label">Range:</span>
                 <RangeFilter value={btcRange} onChange={handleBtcRangeChange} label="btc" />
               </div>
-              <BtcChart series={btcSeries} allYears={btcAll} range={btcRange} />
+              <BtcChart series={btcSeries} allYears={btcAll} range={btcRange} currency={currency} rates={rates} />
               {btcSeries.length > 0 ? (
                 <p className="hint">{btcSeries.length} year(s) shown, full year view, BTC synthetic for 2010-2014, real from Sep 2014, hover for exact values</p>
               ) : btcRange ? (
@@ -218,7 +245,7 @@ export default function App() {
                 <RangeFilter value={overlayRange} onChange={handleOverlayRangeChange} label="overlay" />
                 <span className="hint">Both indexed to {overlayRange ? `start of last ${overlayRange}` : "Jan 1 = 100"}, hover lines for exact % + price</span>
               </div>
-              <OverlayChart spSeries={spAllSeries} btcSeries={btcAllSeries} year={overlaySelected} range={overlayRange} />
+              <OverlayChart spSeries={spAllSeries} btcSeries={btcAllSeries} year={overlaySelected} range={overlayRange} currency={currency} rates={rates} />
             </div>
           )}
         </section>

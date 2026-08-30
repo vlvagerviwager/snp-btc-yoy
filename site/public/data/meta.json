@@ -1,7 +1,9 @@
 {
-  "generatedAt": "2026-08-30T12:09:00.083Z",
+  "generatedAt": "2026-08-30T13:44:19.278Z",
   "sources": [
     "yahoo",
     "coingecko/synthetic"
-  ]
+  ],
+  "baseCurrency": "USD",
+  "defaultDisplayCurrency": "EUR"
 }

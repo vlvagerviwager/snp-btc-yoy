@@ -200,8 +200,51 @@ async function main() {
   // also write a small meta
   writeFileSync(
     join(OUT_DIR, "meta.json"),
-    JSON.stringify({ generatedAt: new Date().toISOString(), sources: ["yahoo", "coingecko/synthetic"] }, null, 2)
+    JSON.stringify({ generatedAt: new Date().toISOString(), sources: ["yahoo", "coingecko/synthetic"], baseCurrency: "USD", defaultDisplayCurrency: "EUR" }, null, 2)
   );
+
+  // Fetch FX rates for currency conversion (third-party: Frankfurter + exchangerate.host)
+  // This allows the app (default EUR) to convert USD snapshot prices at runtime.
+  // We grab current rates and also try to fetch a EUR sample for BTC to verify.
+  try {
+    const fxRes = await fetch("https://api.frankfurter.app/latest?from=USD");
+    if (fxRes.ok) {
+      const fxJson = (await fxRes.json()) as { rates: Record<string, number>; date: string };
+      writeFileSync(join(OUT_DIR, "fx.json"), JSON.stringify({ base: "USD", date: fxJson.date, rates: fxJson.rates, source: "frankfurter.app" }, null, 2));
+      console.log(`Wrote fx.json base USD date ${fxJson.date} rates ${Object.keys(fxJson.rates).join(",")}`);
+    } else {
+      console.warn(`FX frankfurter failed ${fxRes.status}`);
+    }
+  } catch (e) {
+    console.warn("FX fetch failed, trying exchangerate.host", e);
+    try {
+      const r2 = await fetch("https://api.exchangerate.host/latest?base=USD");
+      if (r2.ok) {
+        const j2 = (await r2.json()) as { rates: Record<string, number> };
+        writeFileSync(join(OUT_DIR, "fx.json"), JSON.stringify({ base: "USD", date: new Date().toISOString().slice(0, 10), rates: j2.rates, source: "exchangerate.host" }, null, 2));
+        console.log(`Wrote fx.json via exchangerate.host`);
+      }
+    } catch (e2) {
+      console.warn("FX fallback also failed", e2);
+    }
+  }
+
+  // Also fetch BTC in EUR for verification that EUR data can be grabbed again
+  try {
+    const btcEur = await fetch("https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=eur&days=max&interval=daily");
+    if (btcEur.ok) {
+      const j = (await btcEur.json()) as { prices: [number, number][] };
+      const sample = j.prices.slice(-3).map(([ts, p]) => ({ date: toISO(new Date(ts)), close: p }));
+      console.log(`BTC EUR sample last 3: ${JSON.stringify(sample)}`);
+      // We keep USD snapshot as source of truth; EUR conversion at runtime via FX is preferred for consistency with S&P.
+      // Optionally write a separate snapshot if needed:
+      // const btcEurRaw = j.prices.map(([ts, price]) => ({ date: toISO(new Date(ts)), close: price }));
+      // const btcEurSnap = normalizeYearly(btcEurRaw, "BTC_EUR");
+      // writeFileSync(join(OUT_DIR, "btc_eur.json"), JSON.stringify(btcEurSnap, null, 2));
+    }
+  } catch (e) {
+    console.warn("BTC EUR fetch failed (optional)", e);
+  }
 }
 
 main().catch((e) => {
