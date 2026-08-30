@@ -69,7 +69,7 @@ export function OverlayChart({ spSeries, btcSeries, year, range }: { spSeries: Y
       <ResponsiveContainer>
         <LineChart data={data} margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-          <XAxis dataKey="doy" type="number" domain={[1, 365]} ticks={MONTH_STARTS} tickFormatter={doyToLabel} tick={{ fontSize: 11, fill: "var(--fg)" }} />
+          <XAxis dataKey="doy" type="number" domain={[1, 365]} ticks={[...MONTH_STARTS, 365]} tickFormatter={(doy) => (doy === 365 ? "" : doyToLabel(doy))} tick={{ fontSize: 11, fill: "var(--fg)" }} />
           <YAxis tick={{ fontSize: 11, fill: "var(--fg)" }} domain={["auto", "auto"]} label={{ value: "Indexed (Jan 1 = 100)", angle: -90, position: "insideLeft", fontSize: 11, fill: "var(--fg)" }} />
           <Tooltip content={<OverlayTooltip />} />
           <Legend />

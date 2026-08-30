@@ -124,7 +124,7 @@ export function doyToLabel(doy: number): string {
   return "Dec";
 }
 
-export const MONTH_STARTS = [15, 46, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349];
+export const MONTH_STARTS = [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
 
 export function COLORS(year: number, allYears: number[]): string {
   // deterministic palette
