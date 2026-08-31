@@ -7,7 +7,7 @@ import { YearFilter } from "./components/YearFilter";
 import { RangeFilter } from "./components/RangeFilter";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { CurrencySelector } from "./components/CurrencySelector";
-import { fetchFxRates, type Currency, CURRENCIES } from "./lib/currency";
+import { type Currency, CURRENCIES } from "./lib/currency";
 
 function useYearsParam(key: string, all: number[]): [number[], (v: number[]) => void] {
   const [selected, setSelected] = useState<number[]>(() => {
@@ -98,23 +98,15 @@ export default function App() {
       setFxError(false);
       return;
     }
-    // Try live API first, fallback to static fx.json built at data-fetch time
+    // Use static fx.json built at data-fetch time (no live cross-origin fetch to avoid CSP/CORS errors)
     const load = async () => {
-      try {
-        const live = await fetchFxRates("USD");
-        if (live && Object.keys(live).length > 0 && live[currency]) {
-          setRates(live);
-          setFxError(false);
-          return;
-        }
-      } catch {}
       try {
         const base = import.meta.env.BASE_URL || "/";
         const res = await fetch(`${base}data/fx.json`, { signal: AbortSignal.timeout(5000) });
         if (res.ok) {
-          const j = (await res.json()) as { rates: Record<string, number> };
-          if (j.rates && j.rates[currency]) {
-            setRates(j.rates);
+          const jsonData = (await res.json()) as { rates: Record<string, number> };
+          if (jsonData.rates && jsonData.rates[currency]) {
+            setRates(jsonData.rates);
             setFxError(false);
             return;
           }
