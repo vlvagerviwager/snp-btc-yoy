@@ -80,9 +80,3 @@ bunx --bun skills add addyosmani/agent-skills --agent opencode --all -y
 ![Chart 1](screenshots/chart1.png)
 ![Chart 2](screenshots/chart2.png)
 ![Chart 3](screenshots/chart3.png)
-
-## Backlog
-
-- verify values
-- make public and set up GitHub Pages
-- verify deployment job
