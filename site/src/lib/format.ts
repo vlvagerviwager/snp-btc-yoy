@@ -22,3 +22,12 @@ export function isoFromYearDoy(year: number, doy: number): string {
   d.setUTCDate(doy);
   return d.toISOString().slice(0, 10);
 }
+
+export function formatDayMonthYear(iso: string): string {
+  const d = new Date(iso + "T00:00:00Z");
+  if (isNaN(d.getTime())) return iso;
+  const day = d.getUTCDate();
+  const month = d.toLocaleDateString("en-GB", { month: "long", timeZone: "UTC" });
+  const year = d.getUTCFullYear();
+  return `${day} ${month} ${year}`;
+}

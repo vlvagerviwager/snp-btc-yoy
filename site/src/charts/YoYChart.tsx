@@ -4,7 +4,7 @@ import type { Snapshot } from "../types";
 import { COLORS, mergeSeriesByDoy, filterByRange, doyToLabel, MONTH_STARTS, getRecentSeries, type Range } from "../lib/data";
 import { YoYTooltip } from "../components/ChartTooltip";
 import type { Currency } from "../lib/currency";
-import { formatExactDate } from "../lib/format";
+import { formatDayMonthYear } from "../lib/format";
 import { convertPrice, formatPrice } from "../lib/currency";
 
 type Props = {
@@ -37,11 +37,11 @@ export function YoYChart({ series, allYears, range, currency, rates, snapshot, c
                 if (!active || !payload || payload.length === 0) return null;
                 const row = payload[0].payload as { date: string; iso: string; close: number; indexed: number };
                 const doy = Math.ceil((new Date(row.iso + "T00:00:00Z").getTime() - new Date(Date.UTC(new Date(row.iso).getUTCFullYear(), 0, 0)).getTime()) / 86400000);
-                const exact = formatExactDate(row.iso, doy);
+                const header = `${formatDayMonthYear(row.iso)} (doy ${doy})`;
                 const priceStr = formatPrice(convertPrice(row.close, rates, currency), currency);
                 return (
                   <div className="custom-tooltip" style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 0, padding: "8px 10px", fontSize: 12, color: "var(--fg)" }}>
-                    <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{exact}</div>
+                    <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{header}</div>
                     <div style={{ color }}>{name}: {row.indexed.toFixed(2)}%, {priceStr}</div>
                   </div>
                 );

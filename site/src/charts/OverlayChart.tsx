@@ -1,7 +1,7 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from "recharts";
 import type { YearSeries } from "../types";
 import { overlayMerge, filterByRange, doyToLabel, MONTH_STARTS, getRecentOverlay, sp500Snapshot, btcSnapshot, type Range } from "../lib/data";
-import { formatExactDate, isoFromYearDoy } from "../lib/format";
+import { formatDayMonthYear, isoFromYearDoy } from "../lib/format";
 import { convertPrice, formatPrice, type Currency } from "../lib/currency";
 
 function OverlayTooltip({
@@ -22,10 +22,10 @@ function OverlayTooltip({
   const row = (payload[0] as unknown as { payload: Record<string, unknown> }).payload as Record<string, unknown>;
   const doy = row.doy as number;
   const iso = isoFromYearDoy(year, doy);
-  const exact = formatExactDate(iso, doy);
+  const header = `${formatDayMonthYear(iso)} (doy ${doy})`;
   return (
     <div className="custom-tooltip" style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 12, color: "var(--fg)" }}>
-      <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{exact}</div>
+      <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{header}</div>
       {payload.map((p) => {
         if (p.value == null) return null;
         const isSp = p.dataKey === "sp";
@@ -59,10 +59,10 @@ export function OverlayChart({ spSeries, btcSeries, year, range, currency, rates
                 if (!active || !payload || payload.length === 0) return null;
                 const row = (payload[0].payload as { iso: string; sp: number | null; btc: number | null; spPrice: number | null; btcPrice: number | null });
                 const doy = Math.ceil((new Date(row.iso + "T00:00:00Z").getTime() - new Date(Date.UTC(new Date(row.iso).getUTCFullYear(), 0, 0)).getTime()) / 86400000);
-                const exact = formatExactDate(row.iso, doy);
+                const header = `${formatDayMonthYear(row.iso)} (doy ${doy})`;
                 return (
                   <div className="custom-tooltip" style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 12, color: "var(--fg)" }}>
-                    <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{exact}</div>
+                    <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--fg)" }}>{header}</div>
                     {row.sp != null && <div style={{ color: "#2563eb" }}>S&P 500: {row.sp.toFixed(2)}% {row.spPrice != null ? `, ${formatPrice(convertPrice(row.spPrice, rates, currency), currency)}` : ""}</div>}
                     {row.btc != null && <div style={{ color: "#f59e0b" }}>BTC: {row.btc.toFixed(2)}% {row.btcPrice != null ? `, ${formatPrice(convertPrice(row.btcPrice, rates, currency), currency)}` : ""}</div>}
                   </div>

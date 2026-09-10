@@ -39,13 +39,17 @@ Prereqs: [Bun](https://bun.sh) (`curl -fsSL https://bun.sh/install | bash`), Nod
 # install deps
 bun install --cwd site
 
-# (optional) refresh data snapshot: writes site/public/data/sp500.json, btc.json, fx.json from Yahoo/CoinGecko/Frankfurter
-# keeps existing snapshot on disk if fetch fails (no synthetic); commit the result if you want to update the snapshot
-bun run --cwd site fetch-data
-
 # dev server
 bun run --cwd site dev
 # -> http://localhost:5173/snp-btc-yoy/
+```
+
+## Development
+
+```bash
+# refresh data snapshot: writes site/public/data/sp500.json, btc.json, fx.json from Yahoo/CoinGecko/Frankfurter
+# keeps existing snapshot on disk if fetch fails (no synthetic); commit the result if you want to update the snapshot
+bun run --cwd site fetch-data
 
 # typecheck, tests, build
 bun run --cwd site typecheck
