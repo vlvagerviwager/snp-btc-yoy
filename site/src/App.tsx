@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { btcSnapshot, sp500Snapshot, getSeries, type Range } from "./lib/data";
+import { btcSnapshot as bundledBtcSnapshot, sp500Snapshot as bundledSp500Snapshot, fetchSnapshots, getSeries, type Range } from "./lib/data";
+import type { Snapshot } from "./types";
 import { Sp500Chart } from "./charts/Sp500Chart";
 import { BtcChart } from "./charts/BtcChart";
 import { OverlayChart } from "./charts/OverlayChart";
@@ -47,8 +48,21 @@ function useRangeParam(key: string): [Range | null, (r: Range | null) => void] {
 }
 
 export default function App() {
-  const spAll = useMemo(() => sp500Snapshot.yearList, []);
-  const btcAll = useMemo(() => btcSnapshot.yearList, []);
+  const [sp500Snapshot, setSp500Snapshot] = useState<Snapshot>(bundledSp500Snapshot);
+  const [btcSnapshot, setBtcSnapshot] = useState<Snapshot>(bundledBtcSnapshot);
+  const [dataError, setDataError] = useState(false);
+  useEffect(() => {
+    fetchSnapshots()
+      .then(({ sp500, btc }) => {
+        setSp500Snapshot(sp500);
+        setBtcSnapshot(btc);
+        setDataError(false);
+      })
+      .catch(() => setDataError(true));
+  }, []);
+
+  const spAll = useMemo(() => sp500Snapshot.yearList, [sp500Snapshot]);
+  const btcAll = useMemo(() => btcSnapshot.yearList, [btcSnapshot]);
   const overlayYears = useMemo(() => {
     const s = new Set([...spAll, ...btcAll]);
     return [...s].sort((a, b) => a - b);
@@ -168,6 +182,12 @@ export default function App() {
       {fxError && currency !== "USD" && (
         <div data-testid="fx-error" role="alert" style={{ border: "1px solid var(--accent)", background: "var(--card-bg)", padding: "8px 12px", marginBottom: 16, color: "var(--accent)", fontFamily: "Inter, system-ui, sans-serif", fontSize: "0.85rem" }}>
           FX rates unavailable for {currency}, showing prices in USD as fallback. Check network or try USD.
+        </div>
+      )}
+
+      {dataError && (
+        <div data-testid="data-error" role="alert" style={{ border: "1px solid var(--accent)", background: "var(--card-bg)", padding: "8px 12px", marginBottom: 16, color: "var(--accent)", fontFamily: "Inter, system-ui, sans-serif", fontSize: "0.85rem" }}>
+          Data update failed, showing last built snapshot. Try refresh.
         </div>
       )}
 

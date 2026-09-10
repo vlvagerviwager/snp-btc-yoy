@@ -2,8 +2,21 @@ import type { Snapshot, YearSeries } from "../types";
 import sp500Raw from "../../public/data/sp500.json";
 import btcRaw from "../../public/data/btc.json";
 
+// Bundled snapshots as fallback for tests and initial render; runtime will fetch fresh JSON from base + data/*.json
 export const sp500Snapshot = sp500Raw as Snapshot;
 export const btcSnapshot = btcRaw as Snapshot;
+
+export async function fetchSnapshots(): Promise<{ sp500: Snapshot; btc: Snapshot }> {
+  const base = import.meta.env.BASE_URL || "/";
+  const [sp500Res, btcRes] = await Promise.all([
+    fetch(`${base}data/sp500.json`, { signal: AbortSignal.timeout(8000) }),
+    fetch(`${base}data/btc.json`, { signal: AbortSignal.timeout(8000) }),
+  ]);
+  if (!sp500Res.ok || !btcRes.ok) throw new Error("Failed to fetch snapshots");
+  const sp500 = (await sp500Res.json()) as Snapshot;
+  const btc = (await btcRes.json()) as Snapshot;
+  return { sp500, btc };
+}
 
 export function getYears(snap: Snapshot): number[] {
   return snap.yearList;
