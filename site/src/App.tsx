@@ -169,7 +169,7 @@ export default function App() {
         <div>
           <h1>S&P 500 & BTC: YoY Performance</h1>
           <p className="subtitle">
-            Indexed to Jan 1 = 100 per year. Toggle years and range to compare. Data snapshot from Yahoo Finance (S&P 500) and Yahoo Finance / CoinGecko (BTC 2013/2014-present, no synthetic). Generated{" "}
+            Indexed to Jan 1 = 100 per year. Toggle years and range to compare. Data snapshot from Yahoo Finance (S&P 500) and Yahoo Finance / CoinGecko (BTC 2013/2014-present, no synthetic). Updated once a day - generated{" "}
             {new Date(sp500Snapshot.generatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}.
           </p>
         </div>
