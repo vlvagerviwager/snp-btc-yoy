@@ -79,7 +79,7 @@ export function OverlayChart({ spSeries, btcSeries, year, range, currency, rates
   }
   const merged = overlayMerge(spSeries, btcSeries, year);
   const data = filterByRange(merged, range);
-  if (merged.length === 0) return <p data-testid="empty-overlay">No data for {year} (BTC data starts 2010 synthetic, 2014 real).</p>;
+  if (merged.length === 0) return <p data-testid="empty-overlay">No data for {year} (BTC 2013/2014-present, no synthetic).</p>;
   const hasSp = merged.some((d) => d.sp != null);
   const hasBtc = merged.some((d) => d.btc != null);
   if (!hasSp && !hasBtc) return <p data-testid="empty-overlay">No data for {year}.</p>;

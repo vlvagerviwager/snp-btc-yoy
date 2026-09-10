@@ -1,51 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { btcSnapshot as bundledBtcSnapshot, sp500Snapshot as bundledSp500Snapshot, fetchSnapshots, getSeries, type Range } from "./lib/data";
 import type { Snapshot } from "./types";
 import { Sp500Chart } from "./charts/Sp500Chart";
 import { BtcChart } from "./charts/BtcChart";
-import { OverlayChart } from "./charts/OverlayChart";
+const OverlayChart = lazy(() => import("./charts/OverlayChart").then((m) => ({ default: m.OverlayChart })) );
 import { YearFilter } from "./components/YearFilter";
 import { RangeFilter } from "./components/RangeFilter";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { CurrencySelector } from "./components/CurrencySelector";
 import { type Currency, CURRENCIES } from "./lib/currency";
-
-function useYearsParam(key: string, all: number[]): [number[], (v: number[]) => void] {
-  const [selected, setSelected] = useState<number[]>(() => {
-    const sp = new URLSearchParams(window.location.search).get(key);
-    if (sp) {
-      const parsed = sp
-        .split(",")
-        .map((s) => Number(s.trim()))
-        .filter((n) => all.includes(n));
-      if (parsed.length) return parsed.sort((a, b) => a - b);
-    }
-    return [...all];
-  });
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    if (selected.length === all.length) url.searchParams.delete(key);
-    else if (selected.length === 0) url.searchParams.delete(key);
-    else url.searchParams.set(key, selected.join(","));
-    window.history.replaceState({}, "", url.toString());
-  }, [selected, key, all]);
-  return [selected, setSelected];
-}
-
-function useRangeParam(key: string): [Range | null, (r: Range | null) => void] {
-  const [range, setRange] = useState<Range | null>(() => {
-    const v = new URLSearchParams(window.location.search).get(key) as Range | null;
-    if (v && ["1d", "1w", "1m", "3m", "6m", "1y", "5y"].includes(v)) return v;
-    return null;
-  });
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    if (range) url.searchParams.set(key, range);
-    else url.searchParams.delete(key);
-    window.history.replaceState({}, "", url.toString());
-  }, [range, key]);
-  return [range, setRange];
-}
+import { useYearsParam, useRangeParam } from "./hooks/useQueryParam";
 
 export default function App() {
   const [sp500Snapshot, setSp500Snapshot] = useState<Snapshot>(bundledSp500Snapshot);
@@ -112,25 +76,34 @@ export default function App() {
       setFxError(false);
       return;
     }
+    const controller = new AbortController();
+    let cancelled = false;
     // Use static fx.json built at data-fetch time (no live cross-origin fetch to avoid CSP/CORS errors)
     const load = async () => {
       try {
         const base = import.meta.env.BASE_URL || "/";
         const res = await fetch(`${base}data/fx.json`, { signal: AbortSignal.timeout(5000) });
+        if (cancelled || controller.signal.aborted) return;
         if (res.ok) {
           const jsonData = (await res.json()) as { rates: Record<string, number> };
-          if (jsonData.rates && jsonData.rates[currency]) {
+          if (jsonData.rates && jsonData.rates[currency] && !cancelled) {
             setRates(jsonData.rates);
             setFxError(false);
             return;
           }
         }
       } catch {}
-      // last resort: keep empty (will show USD fallback) and show error
-      setRates({});
-      setFxError(true);
+      if (!cancelled) {
+        // last resort: keep empty (will show USD fallback) and show error
+        setRates({});
+        setFxError(true);
+      }
     };
     load();
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [currency]);
 
   const [spCollapsed, setSpCollapsed] = useState(false);
@@ -311,7 +284,9 @@ export default function App() {
                 <RangeFilter value={overlayRange} onChange={handleOverlayRangeChange} label="overlay" />
                 <span className="hint">Both indexed to {overlayRange ? `start of last ${overlayRange}` : "Jan 1 = 100"}, hover lines for exact % + price</span>
               </div>
-              <OverlayChart spSeries={spAllSeries} btcSeries={btcAllSeries} year={overlaySelected} range={overlayRange} currency={currency} rates={rates} />
+              <Suspense fallback={<p>Loading overlay…</p>}>
+                <OverlayChart spSeries={spAllSeries} btcSeries={btcAllSeries} year={overlaySelected} range={overlayRange} currency={currency} rates={rates} />
+              </Suspense>
             </div>
           )}
         </section>

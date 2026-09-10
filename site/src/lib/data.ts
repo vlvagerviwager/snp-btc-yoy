@@ -52,10 +52,20 @@ export function filterByRange<T extends { doy: number }>(data: T[], range: Range
 
 export type RecentPoint = { iso: string; date: string; close: number; indexed: number };
 
-export function getRecentSeries(snap: Snapshot, range: Range): RecentPoint[] {
+// Memoized flat sorted points per snapshot
+const flatSortedCache = new WeakMap<Snapshot, Array<{ iso: string; close: number; indexed: number; doy: number; date: string }>>();
+
+function getFlatSorted(snap: Snapshot) {
+  if (flatSortedCache.has(snap)) return flatSortedCache.get(snap)!;
   const all = Object.values(snap.years)
     .flatMap((y) => y.points)
     .sort((a, b) => a.iso.localeCompare(b.iso));
+  flatSortedCache.set(snap, all);
+  return all;
+}
+
+export function getRecentSeries(snap: Snapshot, range: Range): RecentPoint[] {
+  const all = getFlatSorted(snap);
   if (all.length === 0) return [];
   const days = RANGE_DAYS[range];
   const latest = new Date(all[all.length - 1].iso + "T00:00:00Z");
@@ -130,8 +140,13 @@ export function mergeSeriesByDoy(series: YearSeries[]): MergedPoint[] {
   });
 }
 
-export function doyToLabel(doy: number): string {
-  // approximate month label via doy thresholds (non-leap)
+export function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+export function doyToLabel(doy: number, year?: number): string {
+  // Handle Feb 29 as Feb, otherwise use non-leap thresholds (1-day shift for Mar-Dec in leap years is negligible for YoY)
+  if (doy === 60 && year != null && isLeapYear(year)) return "Feb";
   const cum = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
   for (let i = 0; i < 12; i++) if (doy <= cum[i + 1]) return MONTH_LABELS[i];
   return "Dec";

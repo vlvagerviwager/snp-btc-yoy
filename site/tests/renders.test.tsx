@@ -6,10 +6,10 @@ describe("charts render", () => {
     render(<App />);
     expect(screen.getByTestId("chart-sp500")).toBeInTheDocument();
     expect(screen.getByTestId("chart-btc")).toBeInTheDocument();
-    expect(screen.getByTestId("chart-overlay")).toBeInTheDocument();
+    expect(await screen.findByTestId("chart-overlay")).toBeInTheDocument();
   });
 
-  it("charts containers are present (jsdom size may be 0, so check test ids not SVG)", () => {
+  it("charts containers are present (jsdom size may be 0, so check test ids not SVG)", async () => {
     render(<App />);
     // Check headings that host each chart section
     expect(screen.getByText(/S&P 500 YoY/)).toBeInTheDocument();
@@ -18,6 +18,6 @@ describe("charts render", () => {
     // Containers themselves are the proof of render in no-browser env
     expect(screen.getByTestId("chart-sp500")).toBeTruthy();
     expect(screen.getByTestId("chart-btc")).toBeTruthy();
-    expect(screen.getByTestId("chart-overlay")).toBeTruthy();
+    expect(await screen.findByTestId("chart-overlay")).toBeTruthy();
   });
 });

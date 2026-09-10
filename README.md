@@ -9,7 +9,7 @@ S&P 500 & BTC Year-over-Year Performance: static site on GitHub Pages. This star
 Interactive static site with 3 charts:
 
 1. **S&P 500 YoY**: multi-series line chart, one line per year (2010-present), indexed to Jan 1 = 100
-2. **BTC YoY**: same, for BTC (2010-present; 2010-2014 synthetic seeded from Yahoo BTC-USD Sep 2014 first close, 2014-present real)
+2. **BTC YoY**: same, for BTC (2014-present via Yahoo, 2013-present via CoinGecko, no synthetic, 2010-2013 missing is accurate)
 3. **Overlay: S&P 500 vs BTC**: pick a year, see both assets indexed together for direct comparison
 
 ## Features
@@ -39,8 +39,8 @@ Prereqs: [Bun](https://bun.sh) (`curl -fsSL https://bun.sh/install | bash`), Nod
 # install deps
 bun install --cwd site
 
-# (optional) refresh data snapshot: writes site/public/data/sp500.json, btc.json from Yahoo
-# falls back to synthetic if offline; commit the result if you want to update the snapshot
+# (optional) refresh data snapshot: writes site/public/data/sp500.json, btc.json, fx.json from Yahoo/CoinGecko/Frankfurter
+# keeps existing snapshot on disk if fetch fails (no synthetic); commit the result if you want to update the snapshot
 bun run --cwd site fetch-data
 
 # dev server
