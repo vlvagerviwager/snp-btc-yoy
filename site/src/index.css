@@ -101,30 +101,30 @@ body {
     padding: 0 12px 32px;
   }
   .app-header {
+    position: relative;
     flex-direction: column;
-    flex-wrap: wrap;
+    padding-top: 40px;
     gap: 16px;
   }
   .app-header > div:first-child,
   .app-header > div:last-child {
     width: 100%;
-    flex: none;
-  }
-  .app-header > div:last-child {
-    align-items: stretch !important;
   }
   .app-header h1 {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
   }
   .currency-selector,
-  .currency-selector select,
-  .theme-toggle {
+  .currency-selector select {
     width: 100%;
     max-width: 100%;
   }
-  .currency-selector select {
-    flex: 1;
-    min-width: 0;
+  .currency-selector {
+    font-size: 0.8rem;
+  }
+  .theme-toggle {
+    position: absolute;
+    top: 12px;
+    right: 0;
   }
 }
 

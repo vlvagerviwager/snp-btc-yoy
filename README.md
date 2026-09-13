@@ -73,6 +73,7 @@ bunx --bun skills add addyosmani/agent-skills --agent opencode --all -y
 - **S&P 500** daily closes from Yahoo Finance `^GSPC` (free, no key), 2010-present.
 - **BTC** from Yahoo `BTC-USD` (Sep 2014-present) and CoinGecko (2013-present), no synthetic for early years (2010-2013 missing is accurate).
 - Snapshot normalized per-year to Jan 1 = 100 (`indexed`). Raw closes retained for tooltips.
+- **Updates:** Data is fetched and the site is rebuilt and deployed once a day at 06:00 UTC via `.github/workflows/update-data.yml` (`bun run --cwd site fetch-data` → `site/public/data/*.json` → commit → Pages deploy). The `Generated` date in the header shows the snapshot time. You can also trigger a manual update via Actions → `update-data` → Run workflow.
 
 ## Tests & CI
 
