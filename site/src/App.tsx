@@ -293,7 +293,7 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        <a href="https://github.com/vlvagerviwager/snp-btc-yoy">GitHub: snp-btc-yoy</a>, <a href="LICENSE">PolyForm Noncommercial 1.0.0</a>, Static site, no tracking.
+        <a href="https://github.com/vlvagerviwager/snp-btc-yoy">GitHub: snp-btc-yoy</a>, <a href="LICENSE">PolyForm Noncommercial 1.0.0</a>. Static site, no tracking.
       </footer>
     </div>
   );

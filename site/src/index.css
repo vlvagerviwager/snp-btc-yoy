@@ -81,9 +81,51 @@ body {
   justify-content: space-between;
   gap: 24px;
   align-items: flex-start;
+  flex-wrap: nowrap;
   border-bottom: 1px solid var(--border);
   padding: 28px 0 20px;
   margin-bottom: 28px;
+}
+
+.app-header > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-header > div:last-child {
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .app {
+    padding: 0 12px 32px;
+  }
+  .app-header {
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .app-header > div:first-child,
+  .app-header > div:last-child {
+    width: 100%;
+    flex: none;
+  }
+  .app-header > div:last-child {
+    align-items: stretch !important;
+  }
+  .app-header h1 {
+    font-size: 1.6rem;
+  }
+  .currency-selector,
+  .currency-selector select,
+  .theme-toggle {
+    width: 100%;
+    max-width: 100%;
+  }
+  .currency-selector select {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 .app-header h1 {
