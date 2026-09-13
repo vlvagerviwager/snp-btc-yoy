@@ -398,3 +398,48 @@ body {
   letter-spacing: 0.06em;
   font-variant-caps: all-small-caps;
 }
+
+.accuracy-warning {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  background: var(--card-bg);
+  padding: 10px 14px;
+  margin-bottom: 20px;
+  font-family: Georgia, Times New Roman, serif;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--fg);
+}
+
+.accuracy-warning > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.accuracy-dismiss {
+  flex-shrink: 0;
+  align-self: flex-start;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+  padding: 4px 10px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .accuracy-warning {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .accuracy-dismiss {
+    align-self: flex-start;
+    width: auto;
+  }
+}

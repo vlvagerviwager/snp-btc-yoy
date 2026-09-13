@@ -109,6 +109,19 @@ export default function App() {
   const [spCollapsed, setSpCollapsed] = useState(false);
   const [btcCollapsed, setBtcCollapsed] = useState(false);
   const [overlayCollapsed, setOverlayCollapsed] = useState(false);
+  const [showAccuracyWarning, setShowAccuracyWarning] = useState(() => {
+    try {
+      return localStorage.getItem("dismissAccuracyWarning") !== "true";
+    } catch {
+      return true;
+    }
+  });
+  const dismissAccuracyWarning = () => {
+    try {
+      localStorage.setItem("dismissAccuracyWarning", "true");
+    } catch {}
+    setShowAccuracyWarning(false);
+  };
 
   // Mutual exclusivity handlers
   const handleSpYearChange = (next: number[]) => {
@@ -164,24 +177,27 @@ export default function App() {
         </div>
       )}
 
-      <div
-        data-testid="accuracy-warning"
-        role="note"
-        aria-label="Accuracy disclaimer"
-        style={{
-          border: "1px solid var(--border)",
-          borderLeft: "4px solid var(--accent)",
-          background: "var(--card-bg)",
-          padding: "10px 14px",
-          marginBottom: 20,
-          fontFamily: "Georgia, Times New Roman, serif",
-          fontSize: "0.85rem",
-          lineHeight: 1.5,
-          color: "var(--fg)",
-        }}
-      >
-        <strong style={{ fontWeight: 700 }}>Important:</strong> Data is provided for informational purposes only. Accuracy is not guaranteed and past performance is not indicative of future results. Nothing here is financial advice, investment advice, or a recommendation. Do not make financial decisions based solely on this site. Verify values with primary sources (Yahoo Finance, CoinGecko, and your broker) before acting.
-      </div>
+      {showAccuracyWarning && (
+        <div
+          data-testid="accuracy-warning"
+          role="note"
+          aria-label="Accuracy disclaimer"
+          className="accuracy-warning"
+        >
+          <div>
+            <strong style={{ fontWeight: 700 }}>Important:</strong> Data is provided for informational purposes only. Accuracy is not guaranteed and past performance is not indicative of future results. Nothing here is financial advice, investment advice, or a recommendation. Do not make financial decisions based solely on this site. Verify values with primary sources (Yahoo Finance, CoinGecko, and your broker) before acting.
+          </div>
+          <button
+            type="button"
+            aria-label="Dismiss accuracy warning"
+            data-testid="dismiss-accuracy-warning"
+            onClick={dismissAccuracyWarning}
+            className="accuracy-dismiss"
+          >
+            Dismiss ×
+          </button>
+        </div>
+      )}
 
       <main className="grid">
         <section className="card" aria-labelledby="sp500-heading">
